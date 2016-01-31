@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reviewer
+package one2merge
 
 import (
-	reviewer "."
+	one2merge "."
 
 	"github.com/google/go-github/github"
 	"reflect"
@@ -65,8 +65,8 @@ func (m *mockTicketsService) ListComments(owner string, repo string, number int,
 }
 
 // Constructor for mockGHClient.
-func newMockGHClient(listPR []github.PullRequest, listIssueComments [][]github.IssueComment) *reviewer.GHClient {
-	client := &reviewer.GHClient{}
+func newMockGHClient(listPR []github.PullRequest, listIssueComments [][]github.IssueComment) *one2merge.GHClient {
+	client := &one2merge.GHClient{}
 	client.Changes = newMockChangesService(listPR)
 	client.Tickets = newMockTicketsService(listIssueComments)
 	return client
@@ -80,16 +80,16 @@ func mockGetString(k string) string {
 }
 
 func TestGetGHAuth(t *testing.T) {
-	reviewer.GetString = mockGetString
+	one2merge.GetString = mockGetString
 
 	var result interface{}
 	var errClient error
-	result, errClient = reviewer.GetClient()
+	result, errClient = one2merge.GetClient()
 
 	if errClient != nil {
 		t.Fatalf("GetClient returned error(%s) when everything was ok", errClient)
 	}
-	v, err := result.(reviewer.GHClient)
+	v, err := result.(one2merge.GHClient)
 	if err {
 		t.Fatalf("GetClient returned %s instead of github.Client", reflect.TypeOf(v))
 	}
@@ -127,9 +127,9 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	emptyListIC = make([][]github.IssueComment, 0)
 	client := newMockGHClient(emptyListPR, emptyListIC)
 
-	var result []reviewer.PullRequestInfo
+	var result []one2merge.PullRequestInfo
 	var err error
-	result, err = reviewer.GetPullRequestInfos(client, "user", "repo", []string{})
+	result, err = one2merge.GetPullRequestInfos(client, "user", "repo", []string{})
 
 	if err != nil {
 		t.Fatalf("Something went wrong when getting PR information")
@@ -142,7 +142,7 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	onePR[0] = newMockPullRequest(10, "Initial PR", false)
 	client = newMockGHClient(onePR, emptyListIC)
 
-	result, err = reviewer.GetPullRequestInfos(client, "user", "repo", []string{})
+	result, err = one2merge.GetPullRequestInfos(client, "user", "repo", []string{})
 
 	if err != nil {
 		t.Fatalf("Something went wrong when getting PR information")
@@ -156,7 +156,7 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	twoPR[1] = newMockPullRequest(11, "Not so initial PR", false)
 	client = newMockGHClient(twoPR, emptyListIC)
 
-	result, err = reviewer.GetPullRequestInfos(client, "user", "repo", []string{})
+	result, err = one2merge.GetPullRequestInfos(client, "user", "repo", []string{})
 
 	if err != nil {
 		t.Fatalf("Something went wrong when getting PR information")
@@ -172,7 +172,7 @@ func TestIsMergeable(t *testing.T) {
 	mergeable := true
 	pr := newMockPullRequest(id, title, mergeable)
 
-	if !reviewer.IsMergeable(&pr) {
+	if !one2merge.IsMergeable(&pr) {
 		t.Fatalf("PR #%d, %s should be mergeable", id, title)
 	}
 }

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reviewer
+package one2merge
 
 import (
-	reviewer "."
+	one2merge "."
 	"testing"
 )
 
@@ -69,32 +69,32 @@ func mockIsSet2(a string) bool {
 }
 
 func TestCheckFile(t *testing.T) {
-	reviewer.ConfigFileUsed = mockConfigFileUsed
+	one2merge.ConfigFileUsed = mockConfigFileUsed
 
-	err := reviewer.CheckFile()
+	err := one2merge.CheckFile()
 	if err == nil {
 		t.Fatal("Without configuration file or empty, it should complain")
 	}
 
-	reviewer.ConfigFileUsed = mockConfigFileUsed2
+	one2merge.ConfigFileUsed = mockConfigFileUsed2
 
-	err = reviewer.CheckFile()
+	err = one2merge.CheckFile()
 	if err != nil {
 		t.Fatal("With configuration file not empty, it should not complain")
 	}
 }
 
 func TestCheckRepositories(t *testing.T) {
-	reviewer.IsSet = mockIsSet
+	one2merge.IsSet = mockIsSet
 
-	err := reviewer.CheckRepositories()
+	err := one2merge.CheckRepositories()
 	if err == nil {
 		t.Fatal("Without Repositories tag or without any repository set, it should complain")
 	}
 
-	reviewer.IsSet = mockIsSet2
+	one2merge.IsSet = mockIsSet2
 
-	err = reviewer.CheckRepositories()
+	err = one2merge.CheckRepositories()
 	if err != nil {
 		t.Fatal("With Repositories tag and repositories set, it should not complain")
 	}
@@ -103,7 +103,7 @@ func TestCheckRepositories(t *testing.T) {
 func TestCheckRepositoriesData(t *testing.T) {
 	config := newMockConfig("test")
 
-	response, err := reviewer.CheckRepositoriesData(config)
+	response, err := one2merge.CheckRepositoriesData(config)
 	if err != nil {
 		t.Fatal("With parameters set not return error")
 	}
@@ -114,7 +114,7 @@ func TestCheckRepositoriesData(t *testing.T) {
 
 	config = newMockConfig("test2")
 
-	response, err = reviewer.CheckRepositoriesData(config)
+	response, err = one2merge.CheckRepositoriesData(config)
 	if err == nil {
 		t.Fatal("With parameters not set it should return error")
 	}

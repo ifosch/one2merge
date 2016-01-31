@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"github.com/gophergala2016/reviewer/reviewer"
+	"github.com/ifosch/one2merge/one2merge"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		reviewer.Configure()
+	one2merge.Configure()
 	},
 }
 

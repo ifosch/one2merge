@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gophergala2016/reviewer/reviewer"
+	"github.com/ifosch/one2merge/one2merge"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -41,12 +41,12 @@ type config struct {
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "reviewer",
+	Use:   "o2m",
 	Short: "Code review your pull requests",
-	Long: `By running reviewer your repo's pull requests will get merged
+	Long: `By running one2merge your repo's pull requests will get merged
 according to the configuration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		reviewer.Execute(DryRun)
+		one2merge.Execute(DryRun)
 	},
 }
 
@@ -66,7 +66,7 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.reviewer.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.one2merge.yaml)")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	RootCmd.Flags().BoolVarP(&DryRun, "dry-run", "d", false, "Won't merge if enabled. Default: disabled.")
@@ -78,9 +78,9 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigName(".reviewer") // name of config file (without extension)
+	viper.SetConfigName(".one2merge") // name of config file (without extension)
 	viper.AddConfigPath("$HOME")     // adding home directory as first search path
-	viper.SetEnvPrefix("reviewer")   // so viper.AutomaticEnv will get matching envvars starting with REVIEWER_
+	viper.SetEnvPrefix("o2m")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
 	viper.AutomaticEnv()             // read in environment variables that match
 
 	// If a config file is found, read it in.

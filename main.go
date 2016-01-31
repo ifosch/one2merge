@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/gophergala2016/reviewer/cmd"
+import "github.com/ifosch/one2merge/cmd"
 
 func main() {
 	cmd.Execute()
