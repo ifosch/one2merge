@@ -37,12 +37,12 @@ func newMockChangesService(listPR []github.PullRequest) *mockChangesService {
 	}
 }
 
-// mockChangesService's List implementation.
+// mockChangesService is List implementation.
 func (m *mockChangesService) List(owner string, repo string, opt *github.PullRequestListOptions) ([]github.PullRequest, *github.Response, error) {
 	return m.listPullRequests, nil, nil
 }
 
-// mockChangesService's List implementation.
+// mockChangesService is Get implementation.
 func (m *mockChangesService) Get(owner string, repo string, number int) (*github.PullRequest, *github.Response, error) {
 	return nil, nil, nil
 }
@@ -59,16 +59,37 @@ func newMockTicketsService(listIssueComments [][]github.IssueComment) *mockTicke
 	}
 }
 
-// mockTicketsService's List implementation.
+// mockTicketsService is List implementation.
 func (m *mockTicketsService) ListComments(owner string, repo string, number int, opt *github.IssueListCommentsOptions) ([]github.IssueComment, *github.Response, error) {
 	return nil, nil, nil
 }
 
+// mockRepositoriesService is mock for github.RepositoriesService.
+type mockRepositoriesService struct {
+	listCombinedStatuses []github.CombinedStatus
+	current              int
+}
+
+// newMockRepositoriesService creates a new RepositoriesService implementation.
+func newMockRepositoriesService(listCS []github.CombinedStatus) *mockRepositoriesService {
+	return &mockRepositoriesService{
+		listCombinedStatuses: listCS,
+	}
+}
+
+// mockRepositoriesServices is GetCombinedStatus implmentation.
+func (m *mockRepositoriesService) GetCombinedStatus(owner string, repo string, ref string, opt *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+	var combinedStatus github.CombinedStatus
+	combinedStatus = m.listCombinedStatuses[m.current]
+	return &combinedStatus, nil, nil
+}
+
 // Constructor for mockGHClient.
-func newMockGHClient(listPR []github.PullRequest, listIssueComments [][]github.IssueComment) *one2merge.GHClient {
+func newMockGHClient(listPR []github.PullRequest, listIssueComments [][]github.IssueComment, listCombinedStatuses []github.CombinedStatus) *one2merge.GHClient {
 	client := &one2merge.GHClient{}
 	client.Changes = newMockChangesService(listPR)
 	client.Tickets = newMockTicketsService(listIssueComments)
+	client.Repositories = newMockRepositoriesService(listCombinedStatuses)
 	return client
 }
 
@@ -111,11 +132,18 @@ func TestCommentSuccessScore(t *testing.T) {
 	testScore("Oops +1 :-1: +1", 0)
 }
 
-func newMockPullRequest(number int, title string, mergeable bool) github.PullRequest {
+func newMockPullRequest(number int, title string, mergeable bool, SHA string) github.PullRequest {
 	return github.PullRequest{
 		Number:    &number,
 		Title:     &title,
 		Mergeable: &mergeable,
+		Head: &github.PullRequestBranch{
+			Label: nil,
+			Ref:   nil,
+			SHA:   &SHA,
+			Repo:  nil,
+			User:  nil,
+		},
 	}
 }
 
@@ -125,7 +153,9 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	emptyListPR = make([]github.PullRequest, 0)
 	var emptyListIC [][]github.IssueComment
 	emptyListIC = make([][]github.IssueComment, 0)
-	client := newMockGHClient(emptyListPR, emptyListIC)
+	var emptyListCS []github.CombinedStatus
+	emptyListCS = make([]github.CombinedStatus, 0)
+	client := newMockGHClient(emptyListPR, emptyListIC, emptyListCS)
 
 	var result []one2merge.PullRequestInfo
 	var err error
@@ -139,8 +169,8 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	}
 
 	onePR := make([]github.PullRequest, 1)
-	onePR[0] = newMockPullRequest(10, "Initial PR", false)
-	client = newMockGHClient(onePR, emptyListIC)
+	onePR[0] = newMockPullRequest(10, "Initial PR", false, "")
+	client = newMockGHClient(onePR, emptyListIC, emptyListCS)
 
 	result, err = one2merge.GetPullRequestInfos(client, "user", "repo", []string{})
 
@@ -152,9 +182,9 @@ func TestGetPullRequestsInfo(t *testing.T) {
 	}
 
 	twoPR := make([]github.PullRequest, 2)
-	twoPR[0] = newMockPullRequest(10, "Initial PR", true)
-	twoPR[1] = newMockPullRequest(11, "Not so initial PR", false)
-	client = newMockGHClient(twoPR, emptyListIC)
+	twoPR[0] = newMockPullRequest(10, "Initial PR", true, "")
+	twoPR[1] = newMockPullRequest(11, "Not so initial PR", false, "")
+	client = newMockGHClient(twoPR, emptyListIC, emptyListCS)
 
 	result, err = one2merge.GetPullRequestInfos(client, "user", "repo", []string{})
 
@@ -170,9 +200,59 @@ func TestIsMergeable(t *testing.T) {
 	id := 1
 	title := "Initial PR"
 	mergeable := true
-	pr := newMockPullRequest(id, title, mergeable)
+	pr := newMockPullRequest(id, title, mergeable, "")
 
 	if !one2merge.IsMergeable(&pr) {
 		t.Fatalf("PR #%d, %s should be mergeable", id, title)
+	}
+}
+
+func TestPassedTests(t *testing.T) {
+	var emptyListPR []github.PullRequest
+	emptyListPR = make([]github.PullRequest, 0)
+	var emptyListIC [][]github.IssueComment
+	emptyListIC = make([][]github.IssueComment, 0)
+	var oneListCS []github.CombinedStatus
+	oneListCS = make([]github.CombinedStatus, 1)
+	successState := "success"
+	successCombinedStatus := github.CombinedStatus{
+		State:         &successState,
+		Name:          nil,
+		SHA:           nil,
+		TotalCount:    nil,
+		Statuses:      nil,
+		CommitURL:     nil,
+		RepositoryURL: nil,
+	}
+	oneListCS[0] = successCombinedStatus
+	client := newMockGHClient(emptyListPR, emptyListIC, oneListCS)
+	id := 1
+	title := "Initial PR"
+	mergeable := true
+	pr := newMockPullRequest(id, title, mergeable, "mysha")
+	owner := "owner"
+	repo := "repo"
+
+	result, err := one2merge.PassedTests(client, &pr, owner, repo)
+	if !result {
+		t.Fatalf("PR #%v, %v should passed (%v)", id, title, err)
+	}
+
+	failedState := "failed"
+	failedCombinedStatus := github.CombinedStatus{
+		State:         &failedState,
+		Name:          nil,
+		SHA:           nil,
+		TotalCount:    nil,
+		Statuses:      nil,
+		CommitURL:     nil,
+		RepositoryURL: nil,
+	}
+	oneListCS[0] = failedCombinedStatus
+	pr = newMockPullRequest(2, title, mergeable, "mysha2")
+
+	result, err = one2merge.PassedTests(client, &pr, owner, repo)
+	if result {
+		t.Fatalf("PR #%v, %v should not passed (%v)", id, title, err)
 	}
 }

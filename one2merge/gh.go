@@ -40,11 +40,17 @@ type TicketsServicer interface {
 	ListComments(string, string, int, *github.IssueListCommentsOptions) ([]github.IssueComment, *github.Response, error)
 }
 
+// RepositoriesServicer is an interface for listing repositories.
+type RepositoriesServicer interface {
+	GetCombinedStatus(string, string, string, *github.ListOptions) (*github.CombinedStatus, *github.Response, error)
+}
+
 // GHClient is the wrapper around github.Client.
 type GHClient struct {
-	client  *github.Client
-	Changes ChangesServicer
-	Tickets TicketsServicer
+	client       *github.Client
+	Changes      ChangesServicer
+	Tickets      TicketsServicer
+	Repositories RepositoriesServicer
 }
 
 // NewGHClient is the constructor for GHClient.
@@ -54,6 +60,7 @@ func NewGHClient(httpClient *http.Client) *GHClient {
 	}
 	client.Changes = client.client.PullRequests
 	client.Tickets = client.client.Issues
+	client.Repositories = client.client.Repositories
 	return client
 }
 
@@ -137,7 +144,7 @@ func IsMergeable(pullRequest *github.PullRequest) bool {
 // PassedTests checks if the PR statuses are ok.
 func PassedTests(client *GHClient, pullRequest *github.PullRequest, owner string, repo string) (bool, error) {
 	head := *pullRequest.Head.SHA
-	combinedStatus, _, err := client.client.Repositories.GetCombinedStatus(owner, repo, head, nil)
+	combinedStatus, _, err := client.Repositories.GetCombinedStatus(owner, repo, head, nil)
 
 	if err != nil {
 		return false, err
