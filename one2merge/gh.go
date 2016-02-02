@@ -33,6 +33,7 @@ var GetString = viper.GetString
 type ChangesServicer interface {
 	List(string, string, *github.PullRequestListOptions) ([]github.PullRequest, *github.Response, error)
 	Get(string, string, int) (*github.PullRequest, *github.Response, error)
+	Merge(string, string, int, string) (*github.PullRequestMergeResult, *github.Response, error)
 }
 
 // TicketsServicer is an interface for listing changes.
@@ -154,7 +155,7 @@ func PassedTests(client *GHClient, pullRequest *github.PullRequest, owner string
 
 // Merge does the merge.
 func Merge(client *GHClient, owner string, repo string, number int) (*github.PullRequestMergeResult, error) {
-	result, _, err := client.client.PullRequests.Merge(owner, repo, number, "Merged automatically by Reviewer")
+	result, _, err := client.Changes.Merge(owner, repo, number, "Merged automatically by Reviewer")
 	return result, err
 }
 
