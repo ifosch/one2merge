@@ -25,6 +25,9 @@ import (
 // token contains the GH token.
 var token = "GITHUB_USERS_TOKEN"
 
+// wasMerged contains the merge status.
+var wasMerged bool
+
 // mockChangesService is a mock for github.PullRequestsService.
 type mockChangesService struct {
 	listPullRequests []github.PullRequest
@@ -37,13 +40,19 @@ func newMockChangesService(listPR []github.PullRequest) *mockChangesService {
 	}
 }
 
-// mockChangesService is List implementation.
+// mockChangesService List implementation.
 func (m *mockChangesService) List(owner string, repo string, opt *github.PullRequestListOptions) ([]github.PullRequest, *github.Response, error) {
 	return m.listPullRequests, nil, nil
 }
 
-// mockChangesService is Get implementation.
+// mockChangesService Get implementation.
 func (m *mockChangesService) Get(owner string, repo string, number int) (*github.PullRequest, *github.Response, error) {
+	return nil, nil, nil
+}
+
+// mockChangesService Merge implementation.
+func (m *mockChangesService) Merge(owner string, repo string, number int, commitMessage string) (*github.PullRequestMergeResult, *github.Response, error) {
+	wasMerged = true
 	return nil, nil, nil
 }
 
@@ -234,6 +243,7 @@ func TestPassedTests(t *testing.T) {
 	repo := "repo"
 
 	result, err := one2merge.PassedTests(client, &pr, owner, repo)
+
 	if !result {
 		t.Fatalf("PR #%v, %v should passed (%v)", id, title, err)
 	}
@@ -252,7 +262,24 @@ func TestPassedTests(t *testing.T) {
 	pr = newMockPullRequest(2, title, mergeable, "mysha2")
 
 	result, err = one2merge.PassedTests(client, &pr, owner, repo)
+
 	if result {
 		t.Fatalf("PR #%v, %v should not passed (%v)", id, title, err)
+	}
+}
+
+func TestMerge(t *testing.T) {
+	var emptyListPR []github.PullRequest
+	emptyListPR = make([]github.PullRequest, 0)
+	var emptyListIC [][]github.IssueComment
+	emptyListIC = make([][]github.IssueComment, 0)
+	var emptyListCS []github.CombinedStatus
+	emptyListCS = make([]github.CombinedStatus, 0)
+	client := newMockGHClient(emptyListPR, emptyListIC, emptyListCS)
+
+	_, _ = one2merge.Merge(client, "owner", "repo", 1)
+
+	if !wasMerged {
+		t.Fatalf("PR #%v should be merged", 1)
 	}
 }
