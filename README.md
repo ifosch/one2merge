@@ -11,7 +11,7 @@ During [Gopher Gala 2016] I decided to join with a rewrite of this in [Go].
 
 ## Installation
 
-    go install github.com/ifosch/one2merge
+    go get github.com/ifosch/one2merge
 
 ## Configuration
 
@@ -57,7 +57,7 @@ where:
 
 You can get One2merge's configuration by invoking the command configure:
 
-      $ o2m configure
+      $ one2merge configure
       Using config file: /home/user/.one2merge.yaml
       - cooldeveloper / mycoolapp ENABLED +1:3
       - cooldeveloper / myevencoolapi ENABLED +1:2
@@ -72,7 +72,7 @@ You can get One2merge's configuration by invoking the command configure:
 
 You can use One2merge basic functionality by simply invoking it directly:
 
-      $ o2m
+      $ one2merge
       Using config file: /home/user/.one2merge.yaml
       + cooldeveloper/mycoolapp
       + cooldeveloper/mycoolapi
